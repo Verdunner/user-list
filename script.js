@@ -15,7 +15,7 @@ let users = [
     },
 ];
 
-function updateUI() {
+function updateUIandSaveData() {
     function renderUsers(list) {
         const container = document.getElementById('userList');
         container.innerHTML = '';
@@ -23,7 +23,13 @@ function updateUI() {
         list.forEach((u, index) => {
             container.innerHTML += `
             <div class="user-card">
-                <img src="${u.photo || 'images/default.png'}" class="avatar">
+                <div class="user-avatar-wrapper ${
+                    u.photo ? '' : 'user-avatar-wrapper--default'
+                }">
+                    <img src="${
+                        u.photo || 'images/default.png'
+                    }" class="user-avatar-pic">
+                </div>                
                 <div class="user-info">
                     <p><strong>${u.firstName} ${u.lastName}</strong></p>
                     <p>Возраст: ${u.age}</p>
@@ -92,10 +98,53 @@ function loadState() {
     }
 }
 
-document.getElementById('filter18').addEventListener('change', updateUI);
-document.getElementById('sortSelect').addEventListener('change', updateUI);
+async function loadFromAPI() {
+    try {
+        const response = await fetch(
+            'https://jsonplaceholder.typicode.com/users'
+        );
+        const apiUsers = await response.json();
 
-// Делегируем событие загрузки фото
+        apiUsers.forEach((apiUser) => {
+            const [firstName, lastName = ''] = apiUser.name.split(' ');
+
+            // Ищем существующего пользователя по email
+            const existing = users.find((u) => u.email === apiUser.email);
+
+            if (existing) {
+                // Обновляем только часть полей, не трогаем photo
+                existing.firstName = firstName;
+                existing.lastName = lastName;
+                existing.email = apiUser.email;
+                existing.age =
+                    existing.age || 18 + Math.floor(Math.random() * 30);
+            } else {
+                // Добавляем нового пользователя
+                users.push({
+                    firstName,
+                    lastName,
+                    email: apiUser.email,
+                    age: 18 + Math.floor(Math.random() * 30),
+                    photo: null,
+                });
+            }
+        });
+
+        updateUIandSaveData();
+    } catch (err) {
+        console.error('Ошибка загрузки API:', err);
+    }
+}
+
+// События фильтра и сортировки
+document
+    .getElementById('filter18')
+    .addEventListener('change', updateUIandSaveData);
+document
+    .getElementById('sortSelect')
+    .addEventListener('change', updateUIandSaveData);
+
+// Событие загрузки фото
 document.getElementById('userList').addEventListener('change', function (e) {
     if (!e.target.classList.contains('upload-photo')) return;
 
@@ -105,10 +154,18 @@ document.getElementById('userList').addEventListener('change', function (e) {
     const reader = new FileReader();
     reader.onload = () => {
         users[index].photo = reader.result;
-        updateUI(); // сохраняет сортировку и фильтры
+        updateUIandSaveData();
     };
     reader.readAsDataURL(file);
 });
+// Событие запроса
+document.getElementById('loadApiBtn').addEventListener('click', loadFromAPI);
+
+// Событие сброса списка
+document.getElementById('resetListBtn').addEventListener('click', () => {
+    localStorage.clear();
+    window.location.reload();
+});
 
 loadState();
-updateUI();
+updateUIandSaveData();
