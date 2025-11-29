@@ -15,70 +15,100 @@ let users = [
     },
 ];
 
-function renderUsers(list) {
-    const container = document.getElementById('userList');
-    container.innerHTML = '';
+function updateUI() {
+    function renderUsers(list) {
+        const container = document.getElementById('userList');
+        container.innerHTML = '';
 
-    list.forEach((u, index) => {
-        const div = document.createElement('div');
-        div.className = 'user-card';
+        list.forEach((u, index) => {
+            container.innerHTML += `
+            <div class="user-card">
+                <img src="${u.photo || 'images/default.png'}" class="avatar">
+                <div class="user-info">
+                    <p><strong>${u.firstName} ${u.lastName}</strong></p>
+                    <p>Возраст: ${u.age}</p>
+                    <p>Email: ${u.email}</p>
 
-        div.innerHTML = `
-            <img src="${u.photo || 'images/default.png'}" class="avatar">
-            <p><strong>${u.firstName} ${u.lastName}</strong></p>
-            <p>Age: ${u.age}</p>
-            <p>Email: ${u.email}</p>
-
-            <label>Добавить фото:
-                <input type="file" data-index="${index}" class="upload-photo">
-            </label>
+                    <label>Добавить фото:
+                        <input type="file" data-index="${index}" class="upload-photo">
+                    </label>
+                </div>
+            </div>
         `;
+        });
+    }
 
-        container.appendChild(div);
-    });
+    function applyFiltersAndSorting() {
+        let result = [...users];
+
+        if (document.getElementById('filter18').checked) {
+            result = result.filter((user) => user.age > 18);
+        }
+
+        const sortValue = document.getElementById('sortSelect').value;
+
+        if (sortValue === 'name') {
+            result.sort((a, b) => a.firstName.localeCompare(b.firstName));
+        }
+        if (sortValue === 'age') {
+            result.sort((a, b) => a.age - b.age);
+        }
+
+        return result;
+    }
+
+    renderUsers(applyFiltersAndSorting());
+    saveState();
 }
 
-function applyFiltersAndSorting() {
-    let result = [...users];
+function saveState() {
+    const state = {
+        users,
+        filter18: document.getElementById('filter18').checked,
+        sortSelect: document.getElementById('sortSelect').value,
+    };
 
-    // Фильтр по возрасту
-    const filter18 = document.getElementById('filter18').checked;
-    if (filter18) {
-        result = result.filter((u) => u.age > 18);
-    }
-
-    // Сортировка
-    const sortValue = document.getElementById('sortSelect').value;
-
-    if (sortValue === 'name') {
-        result.sort((a, b) => a.firstName.localeCompare(b.firstName));
-    } else if (sortValue === 'age') {
-        result.sort((a, b) => a.age - b.age);
-    }
-
-    renderUsers(result);
+    localStorage.setItem('userAppState', JSON.stringify(state));
 }
 
-document.getElementById('filter18').addEventListener('change', () => {
-    applyFiltersAndSorting();
-});
+function loadState() {
+    const saved = localStorage.getItem('userAppState');
+    if (!saved) return;
 
-document.addEventListener('change', function (e) {
-    if (e.target.classList.contains('upload-photo')) {
-        const index = e.target.dataset.index;
-        const file = e.target.files[0];
+    try {
+        const state = JSON.parse(saved);
 
-        const reader = new FileReader();
-        reader.onload = () => {
-            users[index].photo = reader.result;
-            renderUsers(users);
-        };
-        reader.readAsDataURL(file);
+        users = state.users || users;
+
+        if (state.filter18 !== undefined) {
+            document.getElementById('filter18').checked = state.filter18;
+        }
+
+        if (state.sortSelect !== undefined) {
+            document.getElementById('sortSelect').value = state.sortSelect;
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки из localStorage', e);
     }
+}
+
+document.getElementById('filter18').addEventListener('change', updateUI);
+document.getElementById('sortSelect').addEventListener('change', updateUI);
+
+// Делегируем событие загрузки фото
+document.getElementById('userList').addEventListener('change', function (e) {
+    if (!e.target.classList.contains('upload-photo')) return;
+
+    const index = e.target.dataset.index;
+    const file = e.target.files[0];
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        users[index].photo = reader.result;
+        updateUI(); // сохраняет сортировку и фильтры
+    };
+    reader.readAsDataURL(file);
 });
 
-document.getElementById('sortSelect').addEventListener('change', () => {
-    applyFiltersAndSorting();
-});
-
-applyFiltersAndSorting();
+loadState();
+updateUI();
