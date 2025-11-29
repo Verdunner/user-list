@@ -14,12 +14,12 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
+    gap: 10px;
 
     max-width: 1440px;
     height: 100vh;
     margin: 0 auto;
-    padding: 15px 0;
+    padding: 15px;
 
     background-color: #e6e6e6;
 }
@@ -30,8 +30,15 @@ body {
 
 .app__controls {
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.app__btns-list {
+    display: flex;
+    gap: 15px;
 }
 
 .app__button {
@@ -42,24 +49,30 @@ body {
     font-size: 18px;
     border: none;
     border-radius: 10px;
+    color: #fff;
     background-color: #646cff;
 
     cursor: pointer;
 }
 
 .app__list {
-    flex: 1 1 200px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 15px;
+
     border: 1px solid blue;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .user-card {
+    flex: 0 1 49%;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 15px;
 
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     padding: 15px;
 
     background-color: beige;
@@ -68,7 +81,13 @@ body {
 }
 
 .user-info {
-    border: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.user-info p {
+    margin: 0;
 }
 
 .user-avatar-wrapper {
@@ -89,4 +108,61 @@ body {
 .user-avatar-pic {
     width: 100%;
     min-height: 100%;
+}
+
+@media (max-width: 768px) {
+    .app {
+        padding: 10px;
+    }
+
+    .app__controls {
+        gap: 15px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .app__button {
+        width: 100%;
+        height: 45px;
+        font-size: 16px;
+    }
+
+    .user-card {
+        flex: 1 1 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .user-avatar-wrapper {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto;
+    }
+
+    .user-info {
+        width: 100%;
+        border: none;
+        padding: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .app__controls {
+        gap: 10px;
+    }
+
+    .user-card {
+        padding: 10px;
+    }
+
+    .user-avatar-wrapper {
+        width: 60px;
+        height: 60px;
+    }
+
+    .user-info p {
+        margin: 3px 0;
+        font-size: 14px;
+    }
 }
