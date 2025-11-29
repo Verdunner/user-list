@@ -7,16 +7,28 @@
         <link rel="stylesheet" href="style.css" />
     </head>
     <body>
-        <h1>User List</h1>
+        <div class="app">
+            <h1 class="app__title">User List</h1>
 
-        <div id="controls">
-            <label>
-                <input type="checkbox" id="filter18" />
-                Показать только старше 18
-            </label>
+            <section class="app__controls" id="controls">
+                <label class="app__check-label">
+                    <input
+                        class="app__check-input"
+                        type="checkbox"
+                        id="filter18"
+                    />
+                    Показать только старше 18
+                </label>
+
+                <select class="app__select-elem" id="sortSelect">
+                    <option value="">Без сортировки</option>
+                    <option value="name">Сортировать по имени</option>
+                    <option value="age">Сортировать по возрасту</option>
+                </select>
+            </section>
+
+            <div class="app__list" id="userList"></div>
         </div>
-
-        <div id="userList"></div>
 
         <script src="script.js"></script>
     </body>

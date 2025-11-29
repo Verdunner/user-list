@@ -38,12 +38,29 @@ function renderUsers(list) {
     });
 }
 
-document.getElementById('filter18').addEventListener('change', (e) => {
-    if (e.target.checked) {
-        renderUsers(users.filter((u) => u.age > 18));
-    } else {
-        renderUsers(users);
+function applyFiltersAndSorting() {
+    let result = [...users];
+
+    // Фильтр по возрасту
+    const filter18 = document.getElementById('filter18').checked;
+    if (filter18) {
+        result = result.filter((u) => u.age > 18);
     }
+
+    // Сортировка
+    const sortValue = document.getElementById('sortSelect').value;
+
+    if (sortValue === 'name') {
+        result.sort((a, b) => a.firstName.localeCompare(b.firstName));
+    } else if (sortValue === 'age') {
+        result.sort((a, b) => a.age - b.age);
+    }
+
+    renderUsers(result);
+}
+
+document.getElementById('filter18').addEventListener('change', () => {
+    applyFiltersAndSorting();
 });
 
 document.addEventListener('change', function (e) {
@@ -59,3 +76,9 @@ document.addEventListener('change', function (e) {
         reader.readAsDataURL(file);
     }
 });
+
+document.getElementById('sortSelect').addEventListener('change', () => {
+    applyFiltersAndSorting();
+});
+
+applyFiltersAndSorting();
