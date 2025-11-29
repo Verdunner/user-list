@@ -15,7 +15,28 @@ let users = [
     },
 ];
 
-function updateUIandSaveData() {
+function loadFromLocalStorage() {
+    const saved = localStorage.getItem('userAppState');
+    if (!saved) return;
+
+    try {
+        const state = JSON.parse(saved);
+
+        users = state.users || users;
+
+        if (state.filter18 !== undefined) {
+            document.getElementById('filter18').checked = state.filter18;
+        }
+
+        if (state.sortSelect !== undefined) {
+            document.getElementById('sortSelect').value = state.sortSelect;
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки из localStorage', e);
+    }
+}
+
+function updateUI() {
     function renderUsers(list) {
         const container = document.getElementById('userList');
         container.innerHTML = '';
@@ -44,7 +65,7 @@ function updateUIandSaveData() {
         });
     }
 
-    function applyFiltersAndSorting() {
+    function getFilteredAndSortedUsers() {
         let result = [...users];
 
         if (document.getElementById('filter18').checked) {
@@ -63,39 +84,18 @@ function updateUIandSaveData() {
         return result;
     }
 
-    renderUsers(applyFiltersAndSorting());
-    saveState();
-}
+    function saveToLocalStorage() {
+        const state = {
+            users,
+            filter18: document.getElementById('filter18').checked,
+            sortSelect: document.getElementById('sortSelect').value,
+        };
 
-function saveState() {
-    const state = {
-        users,
-        filter18: document.getElementById('filter18').checked,
-        sortSelect: document.getElementById('sortSelect').value,
-    };
-
-    localStorage.setItem('userAppState', JSON.stringify(state));
-}
-
-function loadState() {
-    const saved = localStorage.getItem('userAppState');
-    if (!saved) return;
-
-    try {
-        const state = JSON.parse(saved);
-
-        users = state.users || users;
-
-        if (state.filter18 !== undefined) {
-            document.getElementById('filter18').checked = state.filter18;
-        }
-
-        if (state.sortSelect !== undefined) {
-            document.getElementById('sortSelect').value = state.sortSelect;
-        }
-    } catch (e) {
-        console.error('Ошибка загрузки из localStorage', e);
+        localStorage.setItem('userAppState', JSON.stringify(state));
     }
+
+    renderUsers(getFilteredAndSortedUsers());
+    saveToLocalStorage();
 }
 
 async function loadFromAPI() {
@@ -108,18 +108,15 @@ async function loadFromAPI() {
         apiUsers.forEach((apiUser) => {
             const [firstName, lastName = ''] = apiUser.name.split(' ');
 
-            // Ищем существующего пользователя по email
             const existing = users.find((u) => u.email === apiUser.email);
 
             if (existing) {
-                // Обновляем только часть полей, не трогаем photo
                 existing.firstName = firstName;
                 existing.lastName = lastName;
                 existing.email = apiUser.email;
                 existing.age =
                     existing.age || 18 + Math.floor(Math.random() * 30);
             } else {
-                // Добавляем нового пользователя
                 users.push({
                     firstName,
                     lastName,
@@ -130,19 +127,15 @@ async function loadFromAPI() {
             }
         });
 
-        updateUIandSaveData();
+        updateUI();
     } catch (err) {
         console.error('Ошибка загрузки API:', err);
     }
 }
 
 // События фильтра и сортировки
-document
-    .getElementById('filter18')
-    .addEventListener('change', updateUIandSaveData);
-document
-    .getElementById('sortSelect')
-    .addEventListener('change', updateUIandSaveData);
+document.getElementById('filter18').addEventListener('change', updateUI);
+document.getElementById('sortSelect').addEventListener('change', updateUI);
 
 // Событие загрузки фото
 document.getElementById('userList').addEventListener('change', function (e) {
@@ -154,10 +147,11 @@ document.getElementById('userList').addEventListener('change', function (e) {
     const reader = new FileReader();
     reader.onload = () => {
         users[index].photo = reader.result;
-        updateUIandSaveData();
+        updateUI();
     };
     reader.readAsDataURL(file);
 });
+
 // Событие запроса
 document.getElementById('loadApiBtn').addEventListener('click', loadFromAPI);
 
@@ -167,5 +161,5 @@ document.getElementById('resetListBtn').addEventListener('click', () => {
     window.location.reload();
 });
 
-loadState();
-updateUIandSaveData();
+loadFromLocalStorage();
+updateUI();
